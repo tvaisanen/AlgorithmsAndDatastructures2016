@@ -1,7 +1,8 @@
 import logging
-from settings import logging_level
+from settings import LOGGING_LEVEL, DATE_FORMAT
+from time import strptime
 
-logging.basicConfig(level=logging_level)
+logging.basicConfig(level=LOGGING_LEVEL)
 logger = logging.getLogger(__name__)
 
 # Implementation of linked list
@@ -100,6 +101,43 @@ class LinkedList(object):
 
             if matching_to == key:
                 results.append(node.data)
+
+            node = node.next
+
+        return results
+
+    def search_all_between(self, date0, date1, T=None):
+        """
+        :param key: What we are looking for
+        :param T:  To what we are comparing the key we are looking for
+        :return: array of data objects, no node elements
+        """
+        node = self.head
+
+        limit0 = strptime(date0, DATE_FORMAT)
+        limit1 = strptime(date1, DATE_FORMAT)
+
+        logger.debug(" method: search_all_key_of_T()")
+        logger.debug(" search between: %s as type %s" % (str(limit0), str(limit1)))
+        logger.debug(" searching from data type:")
+        logger.debug(node.__dict__['data'])
+
+        results = []
+
+        while node is not None:
+            data = node.__dict__['data']
+            date = data.date
+
+            between = limit0 <= date and date <= limit1
+            logger.debug("\n %s < %s <%s" % (date0, data.date_str(), date1))
+
+            logger.debug("limit0 < date: %s" % (limit0 < date))
+            logger.debug("date < limit1: %s" % (limit1 > date))
+            logger.debug("between: %s" % between)
+
+            if limit0 <= date <= limit1:
+                results.append(node.data)
+                logger.debug("limit0: %s\nlimit1: %s\ndate: %s" % (type(limit0), type(limit1), type(date)))
 
             node = node.next
 

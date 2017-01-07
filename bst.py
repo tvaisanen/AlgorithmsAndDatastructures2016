@@ -1,10 +1,11 @@
 import logging
-from settings import logging_level
+from settings import LOGGING_LEVEL, DATE_FORMAT
+from time import strptime
 
 # Implementation of binary search tree
 
 
-logging.basicConfig(level=logging_level)
+logging.basicConfig(level=LOGGING_LEVEL)
 logger = logging.getLogger(__name__)
 
 # Node in the tree
@@ -13,12 +14,14 @@ class BSTNode:
     left = None
     right = None
     parent = None
+    count = 0
 
     def __init__(self, d, p=None, l=None, r=None):
         self.data = d
         self.parent = p
         self.left = l
         self.right = r
+        self.count += 1
 
     def print(self):
         print(self.data)
@@ -68,9 +71,6 @@ class BST(object):
 
     def search_key_of_T(self, key, T):
 
-        logger.info("\n\tSearching from BST:")
-        logger.info("\tsearch: %s: %s" % (T, key))
-
         node = self.root
         found = False
         data = None
@@ -80,19 +80,14 @@ class BST(object):
         if searching_string:
             key.lower()
 
-        logger.info("\tSearch loop:\n")
         while (node is not None) and (not found):
             data = node.__dict__['data']
             matching_to = data.__dict__[T]  # use the original datatype of instance
 
-            logger.info(data.__dict__)
-
             if searching_string:
-                logger.info("Lowering")
                 matching_to = matching_to.lower()
 
             if key == matching_to:
-                logger.info(" Results :: Found :: " + str(data))
                 return data
             if matching_to < key:
                 node = node.right
@@ -139,14 +134,42 @@ class BST(object):
         logger.info("\t\n")
         return results
 
+    def search_all_between_dates(self, date0, date1):
+
+        node = self.root
+        results = []
+
+        while node is not None:
+            data = node.__dict__['data']
+            matching_to = data.__dict__['date']  # use the original datatype of instance
+
+            left = node.left
+            right = node.right
+
+            logger.info("\n\tBinary Search Tree data:")
+            logger.info(data.__dict__)
+            logger.info(data.date)
+            logger.info("%s <= %s <= %s" % date0, data.date, date1)
+
+            if date0 <= data.date <= date1:
+                results.append(data)
+            if matching_to < date1:
+                node = node.right
+            else:
+                node = node.left;
+
+        logger.info("\t\nFOUND: ")
+        logger.info(results)
+        logger.info("\t\n")
+        return results
 
     # Prints a node
     def print_node(self, n):
-        if n != None:
+        if n is not None:
             print(' ', n.data, ' ')
 
     def print_inorder(self, node=None):
-        if node != None:
+        if node is not None:
             self.print_inorder(node.left)
             self.print_node(node)
             self.print_inorder(node.right)
@@ -160,6 +183,7 @@ class BST(object):
 
     # TODO: Try to find more generic solution!
     def bst_insert(self, key):
+        self.count += 1
         n = BSTNode(key)
         x = self.root
         y = None
@@ -223,4 +247,5 @@ class BST(object):
                 self.bst_transplant(x, y)
                 y.left = x.left
                 (y.left).parent = y
+        self.count -= 1
         return True

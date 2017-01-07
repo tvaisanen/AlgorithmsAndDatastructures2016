@@ -1,10 +1,10 @@
 from data import Data
 from Classes import Agency
 import logging
-from settings import logging_level
+from settings import LOGGING_LEVEL
 import pytest
 
-logging.basicConfig(level=logging_level)
+logging.basicConfig(level=LOGGING_LEVEL)
 logger = logging.getLogger(__name__)
 
 def initialize_data():

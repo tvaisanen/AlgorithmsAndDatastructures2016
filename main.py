@@ -1,10 +1,10 @@
 from data import Data
-from settings import logging_level
+from settings import LOGGING_LEVEL
 from Classes import *
 import re
 import os, sys
 
-logging.basicConfig(level=logging_level)
+logging.basicConfig(level=LOGGING_LEVEL)
 logger = logging.getLogger(__name__)
 
 # RUN TESTS EVERY TIME
@@ -27,6 +27,7 @@ def menu():
     print("[3] Search customer")
     print("[4] Do something with travel information")
     print("[5] Additional functions")
+    print("[6] Print data")
     print("[0] EXIT\n")
 
     return menu_input()
@@ -65,6 +66,7 @@ def inserted_int(x):
     except Exception as ex:
         return False
 
+
 def menu_input():
     """
     Reads menu input from user.
@@ -79,6 +81,23 @@ def menu_input():
             print("invalid action, try again!")
 
 
+def delete_travel():
+    keyword = input("Deleting travel information, give ID or name:\n>>> ")
+    if inserted_int(keyword):
+        search_by = 'id'
+    else:
+        search_by = 'name'
+
+    travel_to_delete = search(data.travels, keyword, search_by=search_by)
+
+    try:
+        data.travels.list_remove(travel_to_delete)
+        logger.info("Travel information deleted successfully.")
+    except Exception as ex:
+        logger.info("Deleting travel information raised exception")
+        logger.info(str(ex))
+
+
 def search(from_where, keyword, search_by='id', order_by='id', search_all=False):
     """
     "interface" for searching, user doesn't need to know anything about classes...
@@ -88,20 +107,19 @@ def search(from_where, keyword, search_by='id', order_by='id', search_all=False)
     :return: results as a list
     """
 
-    list_types = (Agencies, Travels)
-    bst_types = (Customers, Drivers)
-    is_linked_list = isinstance(from_where, list_types)
-    is_bst = isinstance(from_where, bst_types)
-    searching_int = inserted_int(keyword)
+    searching_int = inserted_int(keyword)  # boolean
 
-    logger.info("search: %s, %s as type: %s " % (search_by, keyword, type(keyword)))
-    logger.info("from %s" % type(from_where))
+    print("\n")
+    logger.info(" search: %s, %s as type: %s " % (search_by, keyword, type(keyword)))
+    logger.info(" from %s" % type(from_where))
 
+    # convert keyword to int if
     if searching_int:
         keyword = int(keyword)
 
     matching_to = search_by
 
+    # ----------- make search defined by input parameters ------------ #
     if search_all:
         results = from_where.search_all_key_of_T(keyword, T=matching_to)
     else:
@@ -109,6 +127,9 @@ def search(from_where, keyword, search_by='id', order_by='id', search_all=False)
 
     logger.info(results)
 
+    # ---------------------------------------------------------------- #
+
+    # Check whether there's one or more search result and what type it is
     try:
         result_count = len(results[0])
         result_type = type(results[0])
@@ -116,12 +137,13 @@ def search(from_where, keyword, search_by='id', order_by='id', search_all=False)
         if results is not None:
             result_count = 1
             result_type = type(results)
-        logger.info(str(ex))
 
     logger.info(" Found %d results." % result_count)
-    logger.info(" Type of result objects: %s." % result_type)
+    logger.info(" Type of result objects: %s.\n" % result_type)
 
-    print("search results: ")
+    # ------------------------------------------------------------------------- #
+
+    print("search results:\n")
     try:
         print(results)
     except IndexError as ie:
@@ -133,6 +155,15 @@ def search(from_where, keyword, search_by='id', order_by='id', search_all=False)
 
     return results
 
+
+def list_customers_between_dates():
+    print("Search active customers between dates:\nfrom:  ")
+    date0 = input_date()
+    print("to:  ")
+    date1 = input_date()
+    return data.travels.search_all_between(date0=date0, date1=date1, T='date')
+
+
 def input_int():
     while True:
         try:
@@ -142,6 +173,7 @@ def input_int():
         except Exception as ex:
             print("Invalid input, try again!")
 
+
 def input_float():
     while True:
         try:
@@ -150,6 +182,7 @@ def input_float():
             return x
         except Exception as ex:
             print("Invalid input, try again!")
+
 
 def input_date():
     print("Give date in format 'YYYY.DD.MM'")
@@ -163,6 +196,7 @@ def input_date():
         except Exception as ex:
             logger.info("\t" + str(ex))
             print("Invalid input, try again!")
+
 
 def input_time():
     print("Give date in format 'HH:MM'")
@@ -199,7 +233,7 @@ def add_travel():
     travel = Travel(id=id, driver_id=driver_id, date=date, time=time, customer_id=customer_id,
                     source=source, destination=destination, amount=amount)
     driver = search(data.drivers, driver_id)
-    # insert newly created travel also to drivers list, so
+    # insert new travel also to drivers list, so
     # there's no need to traverse whole list for updating drivers list
     driver.travels.list_insert(travel)
     data.travels.list_insert(travel)
@@ -227,8 +261,10 @@ def travel_actions_loop():
     """
     while True:
         action = travel_menu()
+
         if action == 0:
             break
+
         elif action == 1:
             keyword = input("Search customers travels:\n>>>")
             customer = search(data.customers, keyword)
@@ -238,12 +274,64 @@ def travel_actions_loop():
             logger.info(" returned results:")
             for i in results:
                 print(i)
+
         elif action == 2:
             add_travel()
         elif action == 3:
+            delete_travel()
+
+
+def function_actions_loop():
+    """
+    loop for handling implemented functions
+    :return: None
+    """
+    while True:
+        action = functions_menu()
+
+        if action == 0:
+            break
+        elif action == 1:
             pass
+        elif action == 2:
+            customers_between = list_customers_between_dates()
+            customers_between.sort(key=lambda x: x.date, reverse=True)
+            for customer in customers_between:
+                print(customer)
+        elif action == 3:
+            delete_travel()
 
 
+def print_menu():
+    print("\nPrint:")
+    print("[1] Agencies")
+    print("[2] Customers")
+    print("[3] Drivers")
+    print("[4] Travels")
+    print("[0] Back")
+    return menu_input()
+
+
+def print_actions_loop():
+    """
+    loop for handling list printing
+    :return: None
+    """
+    while True:
+        action = print_menu()
+
+        if action == 0:
+            break
+        elif action == 1:
+            data.agencies.print_list()
+        elif action == 2:
+            data.customers.print_tree_inorder()
+        elif action == 3:
+            data.drivers.print_tree_inorder()
+        elif action == 4:
+            data.travels.print_list()
+        else:
+            pass
 
 
 def menu_loop():
@@ -251,6 +339,7 @@ def menu_loop():
     while run:
         action = menu()
 
+        # if searching define keyword and where to search
         if action == 1:
             print("search agency")
             where_to_search = data.agencies
@@ -261,15 +350,16 @@ def menu_loop():
             print("search customer")
             where_to_search = data.customers
 
-
         if action == 0:
             print("\nExiting program...")
             run = False
         elif action == 4:
             travel_actions_loop()
         elif action == 5:
-            functions_menu()
-        elif action > 5:
+            function_actions_loop()
+        elif action == 6:
+            print_actions_loop()
+        elif action > 6:
             print("invalid action, try again!")
         else:
             keyword = input("Search: ")
@@ -286,14 +376,9 @@ if __name__ == '__main__':
     logger.info("\nStarting application")
     start_app()
 
-    # TODO: KORJAA, Tää meni rikki ku siivosin nuita vitun parsesiivoushässäköitä tuolta konstruktoreista
-    # TODO: ns. Palveluoperaatiot, asiakkaan matkat, asiakkaat päivämääriltä, asiakasta palvelleet kuljettajat
+    # TODO: ns. asiakasta palvelleet kuljettajat
 
     """
-
-    Funktio, joka muodostaa listan asiakkaista, jotka ovat hankkineet palveluita annettujen
-    päivämäärien välisenä aikana.
-    - timedeltaaa
 
     Funktio, joka muodostaa listan kuljettajista, jotka ovat palvelleet annettua asiakasta
     (tunnistetaan asiakastunnuksen perusteella). Kuljettajat listataan järjestyksessä nimen

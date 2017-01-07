@@ -3,9 +3,7 @@ import os.path
 from linkedlist import *
 from bst import *
 from time import strptime
-from datetime import datetime
-
-dateformat = '%Y.%m.%d'
+from settings import DATE_FORMAT
 
 
 class Customer(object):
@@ -26,7 +24,7 @@ class Driver(object):
         self.name = name
         self.carModel = car_model
         self.travels = travels
-        self.date_hired = strptime(date_hired, dateformat),
+        self.date_hired = strptime(date_hired, DATE_FORMAT)
 
 
     def __str__(self):
@@ -34,6 +32,8 @@ class Driver(object):
         return '%5d\t %10s\t %10s\t %10s travels: %s\n' % \
               (self.id, self.name, date, self.carModel, self.travels.count)
 
+    def get_date_hired_str(self):
+        return "%d.%d.%d" % (self.date_hired.tm_year, self.date_hired.tm_mon, self.date_hired.tm_mday)
 
 class Travel(object):
     def __init__(self,
@@ -54,9 +54,12 @@ class Travel(object):
         self.destination = destination
         self.amount = amount
 
+    def date_str(self):
+        return "%d.%d.%d" % (self.date.tm_year, self.date.tm_mon, self.date.tm_mday)
+
     def __str__(self):
         # format date and time for printing
-        date = "%d.%d.%d" % (self.date.tm_year, self.date.tm_mday, self. date.tm_mon)
+        date = "%d.%d.%d" % (self.date.tm_year, self. date.tm_mon, self.date.tm_mday)
         time = "%d:%d" % (self.time.tm_hour, self.time.tm_min)
         return "Id: %d\tdriver: %s\tcustomer: %s\tdate/time: %s / %s\tfrom: %s\tto: %s" \
                % (self.id, self.driver_id, self.customer_id, date, time, self.source, self.destination)
@@ -112,11 +115,13 @@ class Agencies(LinkedList):
             for line in f.readlines():
                 data = line.replace('\n', '').split('\t')
                 if len(data) > 1:
+                    # clean up readed data
                     id = int(data[0])
                     name = data[1].replace('\t', '')
                     date_reg = data[2].replace('\t', '')
                     staff_count = int(data[3])
                     manager_name = data[4].replace('\t', '')
+
                     agency = Agency(id=id,
                                     name=name,
                                     date_reg=date_reg,
@@ -124,8 +129,10 @@ class Agencies(LinkedList):
                                     manager_name=manager_name)
 
                     self.list_insert(agency)
+
         except Exception as ex:
-            logger.critical(str(ex))
+            logger.info("exception with loading data from agencies.txt")
+            logger.info(str(ex))
 
         f.close()
 
@@ -137,12 +144,14 @@ class Agencies(LinkedList):
             node.data.print()
             node = node.next
 
-    # Implement
+    # Required implementations
     def findById(self, id):
         return self.search_key_of_T(id, "id")
 
     def findByName(self, name):
         return self.search_key_of_T(id, "name")
+
+    # -------------------------------------------- #
 
     # extra methods that you might need
     def methodName(self, pars):
@@ -154,6 +163,7 @@ class Customers(BST):
 
     def __init__(self):
         self.root = BST.root
+        self.count = 0
         self.load()
 
     def load(self):
@@ -185,10 +195,10 @@ class Customers(BST):
 class Drivers(BST):
     def __init__(self):
         self.head = BST.root
+        self.count = 0
         if not os.path.exists('drivers.txt'):
             f = open('drivers.txt', 'w')
             f.close()
-        #self.Load()
 
     # for now when loading drivers we must have travel information already
     def Load(self, travels):
@@ -202,8 +212,6 @@ class Drivers(BST):
                     agency_id = int(data[1])
                     driver_name = data[2].replace('\t', '')
                     date_hired = data[3].replace('\t', '')
-                    logger.info(" date hired data")
-                    logger.info(date_hired)
                     car_model = data[4].replace('\t', '')
                     travels_for_driver = self.load_travels(driver_id, travels)
                     driver = Driver(

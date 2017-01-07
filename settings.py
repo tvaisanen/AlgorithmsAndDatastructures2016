@@ -1,3 +1,4 @@
 import logging
 
-logging_level = logging.INFO
+DATE_FORMAT = '%Y.%m.%d'
+LOGGING_LEVEL = logging.DEBUG

@@ -30,7 +30,7 @@ class Data:
         try:
             self.drivers = Drivers()
             self.drivers.Load(self.travels)
-            self.drivers.print_inorder()
+            # self.drivers.print_inorder()
             print("\u2713\tDrivers linked list")
         except Exception as ex:
             logger.debug(str(ex))
@@ -38,7 +38,7 @@ class Data:
 
         try:
             self.customers = Customers()
-            self.customers.print_inorder()
+            # self.customers.print_inorder()
             print("\u2713\tCustomers binary search tree")
         except Exception as ex:
             logger.debug(str(ex))
